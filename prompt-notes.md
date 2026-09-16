@@ -1,0 +1,14 @@
+DevOps ve Site Reliability Engineer (SRE) rollerindeki kişilerin bir arıza anında log ve hata analizinde zamanının %80'ini harcadığı ana problemler şunlardır:
+
+1. "Gürültü" İçinde İğne Aramak (Log Bloat & Noise) Bir sistem çöktüğünde terminale veya log paneline 50.000 satırlık veri akar. Bunun 49.900 satırı sıradan `INFO` ve `DEBUG` mesajları, sürekli tekrarlayan HTTP health-check istekleri veya anlamsız sistem çıktılarıdır. Mühendislerin en büyük zaman kaybı, o devasa metin dosyasının içinde gerçek kırılmanın başladığı ilk 5-10 satırı bulmak için yukarı aşağı scroll yapmaktır.
+2. İç İçe Geçmiş Bozulmuş Formatlar (Escaped Strings & Nested JSON) CloudWatch, Kubernetes veya Docker logları genelde JSON içinde JSON veya kaçış karakterli (escaped) metin olarak basılır: `{\"log\":\"{\\\"error\\\":\\\"Database connection timeout\\\"}\"}`. İnsan gözünün okuması imkansız olan bu tek satırlık karmaşık string'leri biçimlendirmek (beautify/un-escape etmek) için sürekli harici sitelere metin yapıştırıp zaman kaybederler.
+3. Devasa Stack Trace'lerde Kendi Kodunu Bulamamak Java (Spring), Python (Django) veya Node.js bir hata fırlattığında 300 satırlık bir yığın izi (stack trace) üretir. Bu 300 satırın 290 satırı framework'ün kendi iç kütüphane çağrılarıdır. Mühendisin bulmak istediği tek şey şudur: "Benim yazdığım kodun hangi dosyası ve kaçıncı satırı bu hatayı patlattı?" Bu iğneyi o 300 satırın arasından cımbızla çekmek ciddi zaman alır.
+4. Kriptik Altyapı Hataları (K8s, IAM, OOM, Certificate) Altyapı seviyesindeki hatalar genelde açıklayıcı değildir. Örneğin terminalde sadece `Killed` veya `Exit Code 137` yazar. Bir DevOps mühendisi bunun Out of Memory (OOM - Bellek yetersizliği) olduğunu bilir ama hangi Pod'un, hangi RAM sınırına takıldığını bulmak için 15 dakika harcar. Aynı şey geçersiz TLS sertifikaları veya AWS IAM yetkilendirme hataları için de geçerlidir. Hata mesajı jeneriktir, kök neden gizlidir.
+5. "Çalışan" ve "Bozuk" Log Arasındaki Farkı Görememek (Log Diff) Bir güncelleme sonrası sistem patladığında mühendisler şu soruyu sorar: "5 dakika önceki log ile şu anki log arasında ne değişti?" İki farklı log çıktısını yan yana koyup farklarını (diff) bulmaya çalışmak çok zaman alır.  
+LogFarm İçin Çıkarılacak Ders (Prompt Mühendisliği Stratejin)
+Bu bilgileri doğrudan uygulamanın AI Prompt'una entegre ederek LogFarm'u rakiplerinden öne çıkarabilirsin. Yapay zekaya göndereceğin ana sistem prompt'u tam olarak bu sorunları çözmeli:
+
+- Filtreleme kuralı: "Gelen logdaki tekrarlayan health-check ve gürültü satırlarını görmezden gel."
+- Kök neden kuralı: "300 satırlık stack trace olsa bile sadece kullanıcının kendi uygulama kodundaki (user-space) hatalı dosya ve satır numarasını ver."
+- Altyapı hatası kuralı: "Eğer 'Exit Code 137' gibi bir altyapı kodu görürsen bunun bellek aşımı (OOM) olduğunu ve hangi sınırların kontrol edilmesi gerektiğini açıkça yaz."
+

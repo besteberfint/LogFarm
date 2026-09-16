@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@theme {
+  --color-farm-950: #08150f;
+  --color-farm-900: #0e2418;
+  --color-farm-800: #1a3d2c;
+  --color-farm-700: #24553c;
+  --color-farm-600: #2a6b45;
+  --color-farm-500: #2f8a4a;
+  --color-farm-400: #4caf68;
+  --color-farm-300: #86d09a;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-farm-950);
+}
