@@ -6,10 +6,7 @@ import type { AppError, LicenseStatus } from '../types'
 const EMPTY_STATUS: LicenseStatus = {
   unlocked: false,
   licensed: false,
-  locked: false,
-  trialUsed: 0,
-  trialLimit: 3,
-  remaining: 3,
+  locked: true,
 }
 
 type LicenseSettingsProps = {
@@ -37,10 +34,7 @@ export function LicenseSettings({ status, onStatusChange }: LicenseSettingsProps
     if (current.licensed) {
       return t('license.helpLicensed')
     }
-    if (current.locked) {
-      return t('license.helpLocked')
-    }
-    return t('license.helpTrial')
+    return t('license.helpLocked')
   }
 
   function statusText() {
@@ -50,13 +44,7 @@ export function LicenseSettings({ status, onStatusChange }: LicenseSettingsProps
     if (current.licensed) {
       return t('license.statusLicensed')
     }
-    if (current.locked) {
-      return t('license.statusLocked')
-    }
-    return t('license.statusTrial', {
-      remaining: current.remaining,
-      max: current.trialLimit,
-    })
+    return t('license.statusLocked')
   }
 
   if (!canUseNativeStore) {
@@ -159,11 +147,7 @@ export function LicenseSettings({ status, onStatusChange }: LicenseSettingsProps
               void handleBuy()
             }}
             disabled={busy}
-            className={
-              current.locked
-                ? 'rounded-lg bg-farm-500 px-3 py-2 text-sm font-medium text-farm-950 hover:bg-farm-400 disabled:cursor-not-allowed disabled:bg-farm-800 disabled:text-slate-400'
-                : 'text-xs font-medium text-farm-300 underline-offset-2 hover:text-farm-200 hover:underline disabled:no-underline disabled:opacity-50'
-            }
+            className="rounded-lg bg-farm-500 px-3 py-2 text-sm font-medium text-farm-950 hover:bg-farm-400 disabled:cursor-not-allowed disabled:bg-farm-800 disabled:text-slate-400"
           >
             {t('license.buy')}
           </button>

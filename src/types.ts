@@ -15,7 +15,13 @@ export type AppError = {
 export type ErrorResult = { ok: false } & AppError
 
 export type AnalyzeResult =
-  | { ok: true; report: AnalysisReport; truncated: boolean }
+  | {
+      ok: true
+      report: AnalysisReport
+      truncated: boolean
+      language?: string
+      historyId?: string | null
+    }
   | { ok: false; cancelled: true }
   | ErrorResult
 
@@ -37,11 +43,25 @@ export type HistoryRecord = {
   logText: string
   report: AnalysisReport
   truncated: boolean
+  language?: string
+  hasLanguage?: boolean
 }
 
-export type HistoryListResult = { ok: true; items: HistoryListItem[] } | ErrorResult
+export type HistoryListResult =
+  | { ok: true; items: HistoryListItem[]; missingCount?: number }
+  | ErrorResult
 
 export type HistoryGetResult = { ok: true; item: HistoryRecord } | ErrorResult
+
+export type HistoryLocalizeResult =
+  | {
+      ok: true
+      items: HistoryListItem[]
+      item: HistoryRecord | null
+      localizeError?: AppError
+    }
+  | { ok: false; cancelled: true }
+  | ErrorResult
 
 export type HistoryClearResult = { ok: true } | ErrorResult
 
@@ -49,12 +69,11 @@ export type LicenseStatus = {
   unlocked: boolean
   licensed: boolean
   locked: boolean
-  trialUsed: number
-  trialLimit: number
-  remaining: number
 }
 
 export type LicenseStatusResult = ({ ok: true } & LicenseStatus) | ErrorResult
 
 export type LicenseBuyResult = { ok: true } | ErrorResult
+
+export type SupportMailResult = { ok: true } | ErrorResult
 

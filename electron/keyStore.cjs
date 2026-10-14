@@ -15,12 +15,14 @@ function hasStoredKey() {
   }
 }
 
+const MAX_KEY_CHARS = 300
+
 function saveStoredKey(plainKey) {
   const trimmed = typeof plainKey === 'string' ? plainKey.trim() : ''
   if (!trimmed) {
     throw appError('errors.keySaveEmpty')
   }
-  if (!trimmed.startsWith('sk-ant-')) {
+  if (trimmed.length > MAX_KEY_CHARS || !trimmed.startsWith('sk-ant-')) {
     throw appError('errors.keyFormat')
   }
   if (!safeStorage.isEncryptionAvailable()) {

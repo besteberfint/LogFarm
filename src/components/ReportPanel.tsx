@@ -52,20 +52,35 @@ function StepsIcon() {
 
 type ReportPanelProps = {
   report: AnalysisReport | null
+  reportLanguage?: string | null
   error: AppError | null
   truncated: boolean
   isAnalyzing: boolean
+  isLocalizing?: boolean
+  sample?: boolean
   onRetry?: () => void
+  onReanalyze?: () => void
 }
 
 export function ReportPanel({
   report,
+  reportLanguage,
   error,
   truncated,
   isAnalyzing,
+  isLocalizing = false,
+  sample = false,
   onRetry,
+  onReanalyze,
 }: ReportPanelProps) {
-  const { t, tError, formatNumber } = useI18n()
+  const { t, tError, formatNumber, language } = useI18n()
+  const languageMismatch =
+    Boolean(report) &&
+    !isAnalyzing &&
+    !isLocalizing &&
+    !error &&
+    (reportLanguage === 'en' || reportLanguage === 'tr') &&
+    reportLanguage !== language
 
   function formatFullReport(value: AnalysisReport) {
     const steps = value.steps.map((step, index) => `${index + 1}. ${step}`).join('\n')
@@ -83,20 +98,28 @@ export function ReportPanel({
 
   return (
     <section
-      aria-busy={isAnalyzing}
+      aria-busy={isAnalyzing || isLocalizing}
       aria-live="polite"
       className="flex min-h-0 flex-1 flex-col gap-3"
     >
       <div className="flex items-center justify-between gap-4">
         <h2 className="text-sm font-medium text-slate-300">{t('report.title')}</h2>
-        {report && !isAnalyzing && !error ? (
+        {report && !isAnalyzing && !isLocalizing && !error ? (
           <CopyButton text={formatFullReport(report)} labelKey="report.copyAll" />
         ) : null}
       </div>
-      {isAnalyzing ? (
+      {isAnalyzing || isLocalizing ? (
         <div className="rounded-xl border border-farm-800 bg-farm-900 px-4 py-8 text-center">
-          <p className="text-sm text-slate-300">{t('report.loading')}</p>
-          <p className="mt-1 text-xs text-slate-500">{t('report.loadingHint')}</p>
+          <p className="text-sm text-slate-300">
+            {isLocalizing
+              ? t('report.localizing', {
+                  current: t(language === 'tr' ? 'report.langTr' : 'report.langEn'),
+                })
+              : t('report.loading')}
+          </p>
+          <p className="mt-1 text-xs text-slate-500">
+            {isLocalizing ? t('report.localizingHint') : t('report.loadingHint')}
+          </p>
         </div>
       ) : error ? (
         <div className="rounded-xl border border-red-900/60 bg-red-950/40 px-4 py-8 text-center">
@@ -113,7 +136,26 @@ export function ReportPanel({
         </div>
       ) : report ? (
         <>
-          <p className="text-xs text-slate-500">{t('report.source')}</p>
+          <p className="text-xs text-slate-500">{sample ? t('report.sample') : t('report.source')}</p>
+          {languageMismatch ? (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3">
+              <p className="text-sm text-amber-200">
+                {t('report.languageMismatch', {
+                  produced: t(reportLanguage === 'tr' ? 'report.langTr' : 'report.langEn'),
+                  current: t(language === 'tr' ? 'report.langTr' : 'report.langEn'),
+                })}
+              </p>
+              {onReanalyze ? (
+                <button
+                  type="button"
+                  onClick={onReanalyze}
+                  className="rounded-lg bg-farm-500 px-3 py-2 text-sm font-medium text-farm-950 hover:bg-farm-400"
+                >
+                  {t('report.languageMismatchAction')}
+                </button>
+              ) : null}
+            </div>
+          ) : null}
           {truncated ? (
             <p className="rounded-xl border border-amber-900/60 bg-amber-950/40 px-4 py-3 text-sm text-amber-100">
               {t('report.truncated', { limit: formatNumber(LONG_LOG_LIMIT) })}

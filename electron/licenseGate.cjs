@@ -12,9 +12,8 @@ const {
   validateLicenseKey,
   deactivateLicenseKey,
 } = require('./lemonLicense.cjs')
-const { getTrialUsed, incrementTrialUsed } = require('./settingsStore.cjs')
 
-const TRIAL_LIMIT = 3
+const MAX_LICENSE_KEY_CHARS = 256
 
 let validatedThisSession = false
 
@@ -67,36 +66,22 @@ function normalizeLicenseKey(raw) {
 function getLicenseStatus() {
   const unlocked = isDevUnlocked()
   const licensed = !unlocked && hasLicenseRecord()
-  const trialUsed = getTrialUsed()
-  const remaining = Math.max(0, TRIAL_LIMIT - trialUsed)
-  const locked = !unlocked && !licensed && remaining === 0
+  const locked = !unlocked && !licensed
 
   return {
     unlocked,
     licensed,
     locked,
-    trialUsed,
-    trialLimit: TRIAL_LIMIT,
-    remaining,
   }
 }
 
 function assertCanAnalyze() {
-  const status = getLicenseStatus()
-  if (status.locked) {
-    throw appError('errors.licenseRequired', {
-      used: status.trialUsed,
-      max: status.trialLimit,
-    })
+  if (getLicenseStatus().locked) {
+    throw appError('errors.licenseRequired')
   }
 }
 
 function recordSuccessfulAnalysis() {
-  const status = getLicenseStatus()
-  if (status.unlocked || status.licensed) {
-    return getLicenseStatus()
-  }
-  incrementTrialUsed()
   return getLicenseStatus()
 }
 
@@ -131,6 +116,9 @@ async function activateLicense(rawKey) {
   if (!key) {
     throw appError('errors.licenseEmpty')
   }
+  if (key.length > MAX_LICENSE_KEY_CHARS) {
+    throw appError('errors.licenseInvalid')
+  }
 
   const record = await activateLicenseKey(key)
   saveLicenseRecord(record)
@@ -153,7 +141,6 @@ async function clearLicense() {
 }
 
 module.exports = {
-  TRIAL_LIMIT,
   isDevUnlocked,
   getLicenseStatus,
   ensureLicenseFresh,

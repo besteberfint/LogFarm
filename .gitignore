@@ -15,6 +15,19 @@ release
 .env
 .env.*
 !.env.example
+*.pfx
+*.p12
+
+# Staj defteri, ekran görüntüsü araçları ve yerel yedekler
+scripts/make-staj-defteri.py
+scripts/make-staj-kavramlar.py
+scripts/capture-staj-gorseller.cjs
+scripts/_shot-day*.cjs
+scripts/_full-test.cjs
+scripts/_smoke-logs.cjs
+scripts/__pycache__/
+build/icon-yedek-cizgi/
+.netlify/
 
 # Editor directories and files
 .vscode/*

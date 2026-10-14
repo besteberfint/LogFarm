@@ -1,12 +1,13 @@
-// Görev çubuğu ve pencere başlığı aynı işareti kullanır: kırık çatılı çizgi
-// ahır, kapılar, ortada logodaki bronz böcek. 16px, 32px işaretin küçüğüdür.
+// Görev çubuğu ve uygulama içi aynı işareti kullanır: kırık çatılı ahır,
+// ortada sarı/bronz böcek. BARN noktaları değişmez. --outline eski çizgi hali.
 const fs = require('fs')
 const path = require('path')
 const zlib = require('zlib')
 const pngToIco = require('png-to-ico').default
 
 const INK = [0x2f, 0x8a, 0x4a]
-const GOLD = [0xc4, 0x96, 0x58]
+const EDGE = [0x1a, 0x3d, 0x2c]
+const GOLD = [0xe0, 0xb4, 0x3a]
 const SAMPLES = 5
 const ICO_SIZES = [16, 24, 32, 48, 64, 128, 256]
 
@@ -35,6 +36,8 @@ function rectPath(x0, y0, x1, y1) {
 // altına düşüp siliniyordu. Oran sabit olunca her katman aynı kalınlıkta.
 const STROKE_REL = 0.075
 const MASTER_SIZE = 256
+// --outline: eski çizgi ahır. Varsayılan: dolu yeşil ahır, sarı böcek.
+const FILL = !process.argv.includes('--outline')
 
 function distToSeg(px, py, ax, ay, bx, by) {
   const dx = bx - ax
@@ -110,23 +113,50 @@ function hitBug(x, y, half) {
   return 'gold'
 }
 
+function pointInPoly(x, y, points) {
+  let inside = false
+  for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+    const xi = points[i][0]
+    const yi = points[i][1]
+    const xj = points[j][0]
+    const yj = points[j][1]
+    const crosses = yi > y !== yj > y
+    if (crosses && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
+      inside = !inside
+    }
+  }
+  return inside
+}
+
 function hitInk(x, y, half) {
+  // Böcek üstte kalsın diye önce o bakılır.
+  if (hitBug(x, y, half) === 'gold') {
+    return 'gold'
+  }
+
+  const doors = [
+    rectPath(0.14, 0.45, 0.325, 0.9),
+    rectPath(0.675, 0.45, 0.86, 0.9),
+  ]
+
+  if (FILL) {
+    if (nearPolyline(x, y, BARN, true, half)) {
+      return 'edge'
+    }
+    if (pointInPoly(x, y, BARN)) {
+      return 'ink'
+    }
+    return null
+  }
+
   if (nearPolyline(x, y, BARN, true, half)) {
     return 'ink'
   }
 
   // Kapı çizgisi çerçeveden biraz ince: aynı kalınlıkta olunca içindeki
   // boşluk kapanıp dolu blok gibi duruyor.
-  const doors = [
-    rectPath(0.14, 0.45, 0.325, 0.9),
-    rectPath(0.675, 0.45, 0.86, 0.9),
-  ]
   if (doors.some((door) => nearPolyline(x, y, door, true, half * 0.72))) {
     return 'ink'
-  }
-
-  if (hitBug(x, y, half) === 'gold') {
-    return 'gold'
   }
 
   return null
@@ -142,6 +172,7 @@ function renderRgba(pixelSize) {
     for (let px = 0; px < pixelSize; px += 1) {
       let inkHits = 0
       let goldHits = 0
+      let edgeHits = 0
 
       for (let sy = 0; sy < SAMPLES; sy += 1) {
         for (let sx = 0; sx < SAMPLES; sx += 1) {
@@ -152,11 +183,13 @@ function renderRgba(pixelSize) {
             inkHits += 1
           } else if (hit === 'gold') {
             goldHits += 1
+          } else if (hit === 'edge') {
+            edgeHits += 1
           }
         }
       }
 
-      const weight = inkHits + goldHits
+      const weight = inkHits + goldHits + edgeHits
       if (weight === 0) {
         continue
       }
@@ -164,7 +197,8 @@ function renderRgba(pixelSize) {
       const index = (py * pixelSize + px) * 4
       for (let channel = 0; channel < 3; channel += 1) {
         pixels[index + channel] = Math.round(
-          (INK[channel] * inkHits + GOLD[channel] * goldHits) / weight,
+          (INK[channel] * inkHits + GOLD[channel] * goldHits + EDGE[channel] * edgeHits) /
+            weight,
         )
       }
       pixels[index + 3] = Math.round((weight / (SAMPLES * SAMPLES)) * 255)
@@ -282,11 +316,13 @@ async function main() {
   fs.writeFileSync(path.join(root, 'build', 'icon.png'), buffers[buffers.length - 1])
   fs.writeFileSync(path.join(root, 'public', 'icon.png'), buffers[buffers.length - 1])
   // Pencere başlığı bunu kullanır; görev çubuğu ile aynı çizim olsun.
-  fs.writeFileSync(path.join(root, 'electron', 'icon.png'), pngFor(32, master))
+  fs.writeFileSync(path.join(root, 'electron', 'icon.png'), buffers[buffers.length - 1])
 
   const ico = await pngToIco(buffers)
   fs.writeFileSync(path.join(root, 'build', 'icon.ico'), ico)
   fs.writeFileSync(path.join(root, 'electron', 'icon.ico'), ico)
+  // Ayrı ad: Windows aynı .ico yolunun piksellerini önbellekte kilitler.
+  fs.writeFileSync(path.join(root, 'electron', 'lf-icon.ico'), ico)
 
   if (process.argv.includes('--preview')) {
     const previewDir = require('os').tmpdir()

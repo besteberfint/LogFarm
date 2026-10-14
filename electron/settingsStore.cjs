@@ -13,7 +13,7 @@ async function initSettingsStore() {
   const { default: Store } = await import('electron-store')
   store = new Store({
     name: 'settings',
-    defaults: { language: DEFAULT_LANGUAGE, trialUsed: 0 },
+    defaults: { language: DEFAULT_LANGUAGE },
   })
   return store
 }
@@ -32,29 +32,10 @@ function setLanguage(language) {
   return language
 }
 
-function getTrialUsed() {
-  if (!store) {
-    return 0
-  }
-  const value = store.get('trialUsed', 0)
-  return Number.isInteger(value) && value > 0 ? value : 0
-}
-
-function incrementTrialUsed() {
-  if (!store) {
-    return 0
-  }
-  const next = getTrialUsed() + 1
-  store.set('trialUsed', next)
-  return next
-}
-
 module.exports = {
   DEFAULT_LANGUAGE,
   SUPPORTED_LANGUAGES,
   initSettingsStore,
   getLanguage,
   setLanguage,
-  getTrialUsed,
-  incrementTrialUsed,
 }

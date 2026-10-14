@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LogFarm — Paste the log. See the cause.</title>
+    <meta
+      name="description"
+      content="Windows desktop app. Paste a log, and your own Claude key returns a summary, the root cause, and the steps. The report stays on your computer."
+    />
+    <meta name="theme-color" content="#08150f" />
+    <link rel="icon" href="icon.png" type="image/png" />
+    <meta property="og:title" content="LogFarm" />
+    <meta
+      property="og:description"
+      content="Paste a log. Get a summary, the root cause, and the steps. The report stays on your computer."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="icon.png" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="top">
+      <a class="brand" href="#top">
+        <img src="icon.png" alt="" width="48" height="48" />
+        <span>
+          <strong>LogFarm</strong>
+          <small>Harvest the insight. Cut the noise.</small>
+        </span>
+      </a>
+      <a
+        class="button button-solid"
+        href="https://logfarm.lemonsqueezy.com/checkout/buy/aa5ef5c0-0bea-4f3e-a1f4-5bdc800daf4c"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Buy a license</a
+      >
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="kicker">Windows desktop app</p>
+          <h1>Paste the log. See the cause.</h1>
+          <p class="lead">
+            Drop a stack trace, a Docker crash, or a wall of JSON. Your own Claude key writes the
+            report: a summary, the root cause, and the steps to fix it. Successful reports stay on
+            this computer. LogFarm has no server.
+          </p>
+          <div class="hero-actions">
+            <a class="button button-solid" href="#price">$29 license</a>
+            <a class="button button-ghost" href="#sample">See a sample</a>
+          </div>
+        </div>
+
+        <figure class="window" id="sample">
+          <figcaption class="window-bar">
+            <img src="icon.png" alt="" width="22" height="22" />
+            <span>LogFarm</span>
+            <em>Sample report. Not a live analysis.</em>
+          </figcaption>
+          <div class="panes">
+            <div class="pane">
+              <p class="pane-label">Log</p>
+              <pre>ERROR api exited (1)
+dial tcp 10.0.0.12:5432: connect: connection refused
+service=api db=postgres</pre>
+            </div>
+            <div class="pane pane-report">
+              <p class="pane-label">Analysis result</p>
+              <article>
+                <h2>Summary</h2>
+                <p>The API container stops because Postgres refuses the connection.</p>
+              </article>
+              <article>
+                <h2>Root cause</h2>
+                <p>
+                  Nothing is accepting TCP on 10.0.0.12 port 5432. The database host in the API
+                  config does not match a running Postgres, or that service is down.
+                </p>
+              </article>
+              <article>
+                <h2>Steps</h2>
+                <ol>
+                  <li>Check that Postgres is running and listening on port 5432.</li>
+                  <li>Compare 10.0.0.12 with the database URL in the API environment.</li>
+                  <li>If the host is right, check that the Docker network can reach it.</li>
+                </ol>
+              </article>
+            </div>
+          </div>
+        </figure>
+      </section>
+
+      <section class="steps" aria-labelledby="how-title">
+        <h2 id="how-title">Three steps</h2>
+        <ol>
+          <li>
+            <span>1</span>
+            <h3>Add the log</h3>
+            <p>Paste the text, or drop a .log or .txt file on the window.</p>
+          </li>
+          <li>
+            <span>2</span>
+            <h3>Analyze</h3>
+            <p>Claude writes the report with your API key. LogFarm does not pay that bill.</p>
+          </li>
+          <li>
+            <span>3</span>
+            <h3>Act on it</h3>
+            <p>The summary, root cause, and steps stay on screen. History stays on this computer.</p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="price" id="price" aria-labelledby="price-title">
+        <div class="price-offer">
+          <p class="kicker">One time</p>
+          <h2 id="price-title">$29</h2>
+          <p>A lifetime license. After you activate it, this computer has no analysis cap.</p>
+          <a
+            class="button button-solid"
+            href="https://logfarm.lemonsqueezy.com/checkout/buy/aa5ef5c0-0bea-4f3e-a1f4-5bdc800daf4c"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Buy a license</a
+          >
+          <p class="fine">
+            The Windows installer is not on this page yet. The license key arrives in the purchase
+            email.
+          </p>
+        </div>
+        <ul>
+          <li>A license is required before a real analysis. Until then, the app shows a sample report.</li>
+          <li>One computer per license. Remove it there before you move the seat.</li>
+          <li>Claude usage is not included. You need your own key and Anthropic credit.</li>
+          <li>Checkout opens on Lemon Squeezy. Card details never sit with LogFarm.</li>
+        </ul>
+      </section>
+
+      <section class="privacy" aria-labelledby="privacy-title">
+        <h2 id="privacy-title">Where the log goes</h2>
+        <dl>
+          <div>
+            <dt>Claude</dt>
+            <dd>
+              The log is sent to https://api.anthropic.com/v1/messages with your key. It does not
+              pass through a LogFarm server.
+            </dd>
+          </div>
+          <div>
+            <dt>This computer</dt>
+            <dd>
+              Saved analyses stay as plain text in %APPDATA%\logfarm. A password or token inside
+              the log remains there. A report may show [redacted] instead of the secret. That does
+              not delete the saved log.
+            </dd>
+          </div>
+          <div>
+            <dt>License</dt>
+            <dd>
+              The license key is checked with Lemon Squeezy. The check sends this computer’s name,
+              as LogFarm- followed by the machine name.
+            </dd>
+          </div>
+          <div>
+            <dt>Payment</dt>
+            <dd>
+              The card is entered on the Lemon Squeezy checkout page. LogFarm does not store it.
+            </dd>
+          </div>
+        </dl>
+      </section>
+    </main>
+
+    <footer>
+      <img src="icon.png" alt="" width="28" height="28" />
+      <p>LogFarm. A log analyzer for Windows.</p>
+      <a
+        href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=logfarm.support%40gmail.com&amp;su=LogFarm"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Support · logfarm.support@gmail.com</a
+      >
+    </footer>
+  </body>
+</html>

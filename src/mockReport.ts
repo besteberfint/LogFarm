@@ -11,3 +11,19 @@ export const MOCK_REPORT: AnalysisReport = {
     'Review local environment variables and connection settings.',
   ],
 }
+
+export const MOCK_REPORT_TR: AnalysisReport = {
+  summary: 'Uygulama beklenen servise ulaşamadığı için başarısız oluyor (örnek özet).',
+  rootCause:
+    'Hedef servis kapalı, host veya port yanlış, ya da ağ erişimi yok. Bu metin sabit bir örnektir, API yanıtı değildir.',
+  steps: [
+    'Hata iletisindeki host ve port değerlerinin doğru olduğunu kontrol et.',
+    'Servisin (veritabanı, API ve benzeri) çalıştığını doğrula.',
+    'Yerel ortam değişkenlerini ve bağlantı ayarlarını gözden geçir.',
+  ],
+}
+
+export const MOCK_REPORTS = {
+  en: MOCK_REPORT,
+  tr: MOCK_REPORT_TR,
+} as const

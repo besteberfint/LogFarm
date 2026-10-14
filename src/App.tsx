@@ -1,32 +1,48 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { ApiKeySettings } from './components/ApiKeySettings'
 import { HistoryList } from './components/HistoryList'
 import { LanguageSwitcher } from './components/LanguageSwitcher'
 import { LicenseSettings } from './components/LicenseSettings'
+import { SupportSettings } from './components/SupportSettings'
 import { LogInput } from './components/LogInput'
+import { PrivacySettings } from './components/PrivacySettings'
 import { ReportPanel } from './components/ReportPanel'
 import { useI18n } from './i18n/context'
 import { analyzeLog, cancelAnalyze } from './lib/analyze'
+import { MOCK_REPORTS } from './mockReport'
 import type { AnalysisReport, AppError, HistoryListItem, LicenseStatus } from './types'
 
 function App() {
-  const { t } = useI18n()
+  const { t, tError, language } = useI18n()
   const [logText, setLogText] = useState('')
   const [report, setReport] = useState<AnalysisReport | null>(null)
   const [error, setError] = useState<AppError | null>(null)
   const [truncated, setTruncated] = useState(false)
+  const [reportLanguage, setReportLanguage] = useState<string | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [isLocalizing, setIsLocalizing] = useState(false)
   const [historyItems, setHistoryItems] = useState<HistoryListItem[]>([])
   const [activeHistoryId, setActiveHistoryId] = useState<string | null>(null)
+  const activeHistoryIdRef = useRef<string | null>(null)
+  const reportRef = useRef<AnalysisReport | null>(null)
+  activeHistoryIdRef.current = activeHistoryId
+  reportRef.current = report
   const [license, setLicense] = useState<LicenseStatus | null>(null)
   const [showSettings, setShowSettings] = useState(false)
   // null = henüz okunmadı; tarayıcı geliştirmesinde null kalır ve şerit çıkmaz.
   const [apiKeyConfigured, setApiKeyConfigured] = useState<boolean | null>(null)
 
   const trimmed = logText.trim()
+  const licenseKnown = !window.logfarm?.getLicenseStatus || license !== null
   const licenseLocked = Boolean(license?.locked)
-  const canAnalyze = trimmed.length > 0 && !isAnalyzing && !licenseLocked
+  const canAnalyze =
+    trimmed.length > 0 && !isAnalyzing && !isLocalizing && licenseKnown && !licenseLocked
   const canUseHistory = Boolean(window.logfarm?.listHistory)
+  const showingSample =
+    licenseLocked && !report && !error && !isAnalyzing && !isLocalizing
+  const visibleReport = showingSample
+    ? MOCK_REPORTS[language === 'tr' ? 'tr' : 'en']
+    : report
   const bannerText = licenseLocked
     ? t('app.bannerLocked')
     : apiKeyConfigured === false
@@ -35,6 +51,17 @@ function App() {
 
   const handleApiKeyConfigured = useCallback((configured: boolean) => {
     setApiKeyConfigured(configured)
+  }, [])
+
+  useEffect(() => {
+    if (!window.logfarm?.onUnexpectedError) {
+      return
+    }
+    return window.logfarm.onUnexpectedError((payload) => {
+      if (payload && typeof payload.code === 'string' && payload.code.startsWith('errors.')) {
+        setError({ code: payload.code, params: payload.params })
+      }
+    })
   }, [])
 
   async function refreshLicense(validate = false) {
@@ -51,14 +78,60 @@ function App() {
     if (!window.logfarm?.listHistory) {
       return
     }
-    const result = await window.logfarm.listHistory()
+    const result = await window.logfarm.listHistory(language)
     if (result.ok) {
       setHistoryItems(result.items)
     }
   }
 
+  async function applyLocalizedHistory(itemId: string | null) {
+    if (!window.logfarm?.localizeHistory) {
+      if (reportRef.current && (language === 'en' || language === 'tr')) {
+        setReport(MOCK_REPORTS[language])
+        setReportLanguage(language)
+      }
+      return
+    }
+
+    const listed = await window.logfarm.listHistory(language)
+    if (listed.ok) {
+      setHistoryItems(listed.items)
+    }
+
+    if (!listed.ok || !listed.missingCount) {
+      if (itemId && window.logfarm.getHistoryItem) {
+        const current = await window.logfarm.getHistoryItem(itemId, language)
+        if (current.ok) {
+          setReport(current.item.report)
+          setTruncated(current.item.truncated)
+          setReportLanguage(current.item.language ?? language)
+        }
+      }
+      return
+    }
+
+    setIsLocalizing(true)
+    try {
+      const result = await window.logfarm.localizeHistory(language, itemId)
+      if (!result.ok) {
+        if (!('cancelled' in result) || !result.cancelled) {
+          await refreshHistory()
+        }
+        return
+      }
+      setHistoryItems(result.items)
+      if (result.item?.report) {
+        setReport(result.item.report)
+        setTruncated(result.item.truncated)
+        setReportLanguage(result.item.language ?? language)
+        setError(null)
+      }
+    } finally {
+      setIsLocalizing(false)
+    }
+  }
+
   useEffect(() => {
-    void refreshHistory()
     void refreshLicense(false).then(() => refreshLicense(true))
 
     if (window.logfarm?.getApiKeyStatus) {
@@ -69,6 +142,23 @@ function App() {
       })
     }
   }, [])
+
+  useLayoutEffect(() => {
+    if (window.logfarm?.localizeHistory) {
+      return
+    }
+    if (reportRef.current && (language === 'en' || language === 'tr')) {
+      setReport(MOCK_REPORTS[language])
+      setReportLanguage(language)
+    }
+  }, [language])
+
+  useEffect(() => {
+    if (!window.logfarm?.localizeHistory) {
+      return
+    }
+    void applyLocalizedHistory(activeHistoryIdRef.current)
+  }, [language])
 
   useEffect(() => {
     function preventWindowFileOpen(event: DragEvent) {
@@ -92,10 +182,12 @@ function App() {
     setActiveHistoryId(null)
 
     try {
-      const result = await analyzeLog(trimmed)
+      const result = await analyzeLog(trimmed, language)
       if (result.ok) {
         setReport(result.report)
         setTruncated(result.truncated)
+        setReportLanguage(result.language ?? language)
+        setActiveHistoryId(result.historyId ?? null)
         await refreshHistory()
         await refreshLicense()
       } else if ('cancelled' in result) {
@@ -103,11 +195,13 @@ function App() {
       } else {
         setReport(null)
         setTruncated(false)
+        setReportLanguage(null)
         setError(result)
       }
     } catch {
       setReport(null)
       setTruncated(false)
+      setReportLanguage(null)
       setError({ code: 'errors.analyzeFailed' })
     } finally {
       setIsAnalyzing(false)
@@ -122,7 +216,7 @@ function App() {
     if (!window.logfarm?.getHistoryItem) {
       return
     }
-    const result = await window.logfarm.getHistoryItem(id)
+    const result = await window.logfarm.getHistoryItem(id, language)
     if (!result.ok) {
       setError(result)
       return
@@ -130,8 +224,12 @@ function App() {
     setLogText(result.item.logText)
     setReport(result.item.report)
     setTruncated(result.item.truncated)
+    setReportLanguage(result.item.language ?? null)
     setError(null)
     setActiveHistoryId(id)
+    if (result.item.hasLanguage === false) {
+      await applyLocalizedHistory(id)
+    }
   }
 
   async function handleClearHistory() {
@@ -153,7 +251,7 @@ function App() {
         <div className="mx-auto flex max-w-6xl items-start justify-between gap-4 px-6 py-4">
           <div className="flex min-w-0 items-start gap-4">
             <img
-              src={`${import.meta.env.BASE_URL}logo-mark.png`}
+              src={`${import.meta.env.BASE_URL}icon.png`}
               alt="LogFarm"
               className="h-24 w-auto shrink-0 object-contain"
             />
@@ -197,9 +295,14 @@ function App() {
       {showSettings ? (
         <main className="mx-auto flex max-w-3xl flex-col gap-8 px-6 py-8">
           <h2 className="text-lg font-semibold text-slate-100">{t('app.settingsTitle')}</h2>
+          {error ? <p className="text-sm text-red-200">{tError(error)}</p> : null}
           <ApiKeySettings onConfiguredChange={handleApiKeyConfigured} />
           <div className="border-t border-farm-800" />
           <LicenseSettings status={license} onStatusChange={setLicense} />
+          <div className="border-t border-farm-800" />
+          <PrivacySettings />
+          <div className="border-t border-farm-800" />
+          <SupportSettings />
         </main>
       ) : (
       <main className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-8">
@@ -218,7 +321,7 @@ function App() {
         <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
           <LogInput
             value={logText}
-            disabled={isAnalyzing}
+            disabled={isAnalyzing || isLocalizing}
             canAnalyze={canAnalyze}
             isAnalyzing={isAnalyzing}
             lockHint={licenseLocked ? t('log.licenseLocked') : undefined}
@@ -232,17 +335,28 @@ function App() {
               if (!fileError) {
                 setReport(null)
                 setTruncated(false)
+                setReportLanguage(null)
                 setActiveHistoryId(null)
               }
             }}
           />
           <ReportPanel
-            report={report}
+            report={visibleReport}
+            reportLanguage={showingSample ? language : reportLanguage}
             error={error}
-            truncated={truncated}
+            truncated={showingSample ? false : truncated}
             isAnalyzing={isAnalyzing}
+            isLocalizing={isLocalizing}
+            sample={showingSample}
             onRetry={
               error && canAnalyze
+                ? () => {
+                    void handleAnalyze()
+                  }
+                : undefined
+            }
+            onReanalyze={
+              report && canAnalyze && !showingSample
                 ? () => {
                     void handleAnalyze()
                   }

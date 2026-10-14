@@ -16,17 +16,17 @@ export const LANGUAGE_NAMES: Record<Language, string> = {
 // Buradaki errors.* anahtarları ana süreçteki hata kodlarıyla birebir aynı olmalı
 // (electron/claude.cjs, electron/keyStore.cjs, electron/main.cjs).
 const en = {
-  'app.title': 'Log Harvest',
+  'app.title': 'LogFarm',
   'app.slogan': 'Harvest the insight. Cut the noise.',
   'app.subtitle':
-    'Save your own Claude key, paste a log or drop a file, then analyze. Successful reports stay on this computer.',
+    'Activate a license, save your Claude key, then paste a log. Reports stay on this computer.',
   'app.languageLabel': 'Language',
   'app.historyElectronOnly': 'History is only stored in the Electron window.',
   'app.settings': 'Settings',
   'app.backToAnalysis': 'Back',
   'app.settingsTitle': 'Settings',
   'app.bannerKeyMissing': 'No Claude API key saved yet.',
-  'app.bannerLocked': 'The trial is used up. Activate a license to keep analyzing.',
+  'app.bannerLocked': 'A license is required to analyze a log.',
   'app.bannerAction': 'Open settings',
 
   'apiKey.label': 'Claude API key',
@@ -46,14 +46,12 @@ const en = {
     'Saving the API key only works in the Electron window. Start it with npm run electron:dev.',
 
   'license.label': 'License',
-  'license.helpTrial':
-    'You get 3 analyses without a license. After that, paste the key from your purchase email.',
   'license.helpLocked':
-    'The trial is used up. Buy a license, then paste the key here and press Activate.',
+    'Buy a license, paste the key from the email, and press Activate.',
   'license.helpLicensed':
     'This computer is licensed. Remove the key only if you need the seat on another machine.',
   'license.helpDev':
-    'This is a test build. The trial and license check are skipped. You still need your own Claude API key.',
+    'This is a test build. The license check is skipped. You still need your own Claude API key.',
   'license.placeholder': 'License key',
   'license.activate': 'Activate',
   'license.remove': 'Remove',
@@ -67,12 +65,24 @@ const en = {
   'license.clearedMessage': 'The saved license was removed.',
   'license.statusDev': 'Status: this is a test build. The license gate is off.',
   'license.statusLicensed': 'Status: this computer is licensed.',
-  'license.statusTrial':
-    'Status: {remaining} of {max} trial analyses left. A license key is needed after that.',
-  'license.statusLocked':
-    'Status: the trial is used up. Activate a license to keep analyzing.',
+  'license.statusLocked': 'Status: a license is required before analysis.',
   'license.electronOnly':
     'License checks only run in the Electron window. Start it with npm run electron:dev.',
+
+  'privacy.label': 'Where your data goes',
+  'privacy.log':
+    'When you analyze, the log is sent to https://api.anthropic.com/v1/messages with your Claude key. It does not go through a LogFarm server.',
+  'privacy.history':
+    'Saved analyses stay on this computer as plain text, in %APPDATA%\\logfarm. A password or token inside the log stays in that saved log. The report may write [redacted] instead of the secret. That does not delete the saved log.',
+  'privacy.license':
+    'The license key is sent to Lemon Squeezy. The check also sends this computer’s name, as LogFarm- followed by the machine name.',
+  'privacy.payment':
+    'The card is entered on the Lemon Squeezy page. LogFarm does not store it.',
+
+  'support.label': 'Support',
+  'support.help':
+    'Questions about a license or the app go to logfarm.support@gmail.com.',
+  'support.write': 'Write',
 
   'log.label': 'Log',
   'log.pickFile': 'Choose file',
@@ -86,7 +96,7 @@ const en = {
   'log.loadedFileExtra': 'Several files were dropped; only the first was used.',
   'log.longWarning':
     'Over {limit} characters. Analyze will send the beginning and the end only.',
-  'log.licenseLocked': 'The trial is used up. Activate a license to analyze.',
+  'log.licenseLocked': 'Activate a license to analyze.',
 
   'report.title': 'Analysis result',
   'report.copyAll': 'Copy all',
@@ -94,12 +104,22 @@ const en = {
   'report.loadingHint': 'Claude is writing the report. Press Cancel to stop it.',
   'report.retry': 'Try again',
   'report.source': 'Source: Claude',
+  'report.sample':
+    'This is a sample, not your log. Activate a license to analyze a real one.',
   'report.truncated':
     'The log was longer than {limit} characters. Only its beginning and end went to Claude, so lines in the middle may be missing from this report.',
   'report.summary': 'Summary',
   'report.rootCause': 'Root cause',
   'report.steps': 'Steps',
   'report.empty': 'No report yet. Paste a log and press Analyze.',
+  'report.langEn': 'English',
+  'report.langTr': 'Turkish',
+  'report.languageMismatch':
+    'This report was written in {produced}. The buttons switched, but the analysis text did not. Analyze again for {current}.',
+  'report.languageMismatchAction': 'Analyze again',
+  'report.localizing': 'Rewriting the reports in {current}…',
+  'report.localizingHint':
+    'Saved analyses are being translated into the selected language. This is not a new log analysis.',
 
   'copy.copy': 'Copy',
   'copy.copied': 'Copied',
@@ -132,6 +152,7 @@ const en = {
     'Claude rate limit reached. Wait about {seconds} seconds, then press Try again.',
   'errors.rateLimit':
     'Claude quota or rate limit reached. Wait a moment, then press Try again.',
+  'errors.busy': 'An analysis is already running. Wait for it to finish, then try again.',
   'errors.overloaded': 'Claude is busy right now. Wait a moment, then press Try again.',
   'errors.serverDown':
     'The Claude service cannot answer right now. Press Try again in a little while.',
@@ -152,7 +173,9 @@ const en = {
   'errors.incompleteReport':
     "Claude's response is missing the summary, root cause or steps. Try again.",
   'errors.logEmpty': 'Log text is required for an analysis.',
+  'errors.logTooLarge': 'That log is too large. Paste a shorter section, under about 2 MB of text.',
   'errors.analyzeFailed': 'Something went wrong during the analysis.',
+  'errors.unexpected': 'Something unexpected went wrong. Try that action again.',
   'errors.historyNotFound': 'Record not found.',
   'errors.historyReadFailed': 'History could not be read.',
   'errors.historyClearFailed': 'History could not be deleted.',
@@ -166,8 +189,7 @@ const en = {
   'errors.fileNotText': 'This does not look like a text file. Try .log, .txt or .json.',
   'errors.fileNoText': 'There is no readable text in the file.',
   'errors.fileReadFailed': 'The file could not be read.',
-  'errors.licenseRequired':
-    'The {max} trial analyses are used up. Activate a license key to continue.',
+  'errors.licenseRequired': 'Activate a license key to analyze.',
   'errors.licenseEmpty': 'The license field is empty.',
   'errors.licenseInvalid': 'That license key is invalid or already used on another machine.',
   'errors.licenseActivationLimit':
@@ -182,20 +204,22 @@ const en = {
   'errors.licenseActivateFailed': 'The license could not be activated.',
   'errors.licenseClearFailed': 'The license could not be removed.',
   'errors.licenseBuyFailed': 'The store page could not be opened. Check your browser.',
+  'errors.supportMailFailed':
+    'The mail app could not be opened. Write to logfarm.support@gmail.com.',
 }
 
 const tr: Record<keyof typeof en, string> = {
-  'app.title': 'Log Hasadı',
+  'app.title': 'LogFarm',
   'app.slogan': 'Veriyi topla. Gürültüyü ayıkla.',
   'app.subtitle':
-    'Kendi Claude anahtarını kaydet, logu yapıştır veya dosya bırak, Analiz Et. Başarılı raporlar bu bilgisayarda tutulur.',
+    'Lisansı etkinleştir, Claude anahtarını kaydet, sonra logu yapıştır. Raporlar bu bilgisayarda kalır.',
   'app.languageLabel': 'Dil',
   'app.historyElectronOnly': 'Geçmiş yalnızca Electron penceresinde saklanır.',
   'app.settings': 'Ayarlar',
   'app.backToAnalysis': 'Geri',
   'app.settingsTitle': 'Ayarlar',
   'app.bannerKeyMissing': 'Kayıtlı Claude API anahtarı yok.',
-  'app.bannerLocked': 'Deneme hakkı bitti. Analize devam için lisansı etkinleştir.',
+  'app.bannerLocked': 'Log analizi için lisans gerekir.',
   'app.bannerAction': 'Ayarları aç',
 
   'apiKey.label': 'Claude API anahtarı',
@@ -214,14 +238,12 @@ const tr: Record<keyof typeof en, string> = {
     'API anahtarı kaydı yalnızca Electron penceresinde çalışır. npm run electron:dev ile aç.',
 
   'license.label': 'Lisans',
-  'license.helpTrial':
-    'Lisans olmadan 3 analiz hakkın var. Sonrasında satın alma e-postasındaki anahtarı yapıştır.',
   'license.helpLocked':
-    'Deneme hakkı bitti. Lisans al, anahtarı buraya yapıştır ve Etkinleştir’e bas.',
+    'Lisans al, e-postadaki anahtarı yapıştır ve Etkinleştir’e bas.',
   'license.helpLicensed':
     'Bu bilgisayar lisanslı. Anahtarı yalnızca başka bir makinede kullanacaksan kaldır.',
   'license.helpDev':
-    'Bu bir test sürümü. Deneme ve lisans kontrolü atlanır. Yine de kendi Claude API anahtarın gerekir.',
+    'Bu bir test sürümü. Lisans kontrolü atlanır. Yine de kendi Claude API anahtarın gerekir.',
   'license.placeholder': 'Lisans anahtarı',
   'license.activate': 'Etkinleştir',
   'license.remove': 'Kaldır',
@@ -235,12 +257,24 @@ const tr: Record<keyof typeof en, string> = {
   'license.clearedMessage': 'Kayıtlı lisans kaldırıldı.',
   'license.statusDev': 'Durum: bu bir test sürümü. Lisans kontrolü kapalı.',
   'license.statusLicensed': 'Durum: bu bilgisayar lisanslı.',
-  'license.statusTrial':
-    'Durum: {max} denemeden {remaining} analiz kaldı. Sonrasında lisans gerekir.',
-  'license.statusLocked':
-    'Durum: deneme hakkı bitti. Analize devam için lisansı etkinleştir.',
+  'license.statusLocked': 'Durum: analiz için lisans gerekir.',
   'license.electronOnly':
     'Lisans kontrolü yalnızca Electron penceresinde çalışır. npm run electron:dev ile aç.',
+
+  'privacy.label': 'Verin nereye gider',
+  'privacy.log':
+    'Analiz sırasında log, senin Claude anahtarınla https://api.anthropic.com/v1/messages adresine gider. LogFarm sunucusuna uğramaz.',
+  'privacy.history':
+    'Kayıtlı analizler bu bilgisayarda düz metin olarak %APPDATA%\\logfarm klasöründe durur. Logun içindeki parola veya token o kayıtta kalır. Raporda sır yerine [redacted] yazılabilir. Bu, kayıtlı logu silmez.',
+  'privacy.license':
+    'Lisans anahtarı Lemon Squeezy’ye gider. Kontrol, bu bilgisayarın adını da gönderir: LogFarm- ve makine adı.',
+  'privacy.payment':
+    'Kart bilgisi Lemon Squeezy sayfasında girilir. LogFarm kartı saklamaz.',
+
+  'support.label': 'Destek',
+  'support.help':
+    'Lisans veya uygulama hakkında logfarm.support@gmail.com adresine yaz.',
+  'support.write': 'Yaz',
 
   'log.label': 'Log',
   'log.pickFile': 'Dosya seç',
@@ -254,7 +288,7 @@ const tr: Record<keyof typeof en, string> = {
   'log.loadedFileExtra': 'Birden fazla dosya bırakıldı; yalnızca ilki alındı.',
   'log.longWarning':
     '{limit} karakteri aştı. Analiz Et yalnızca başı ve sonu gönderecek.',
-  'log.licenseLocked': 'Deneme hakkı bitti. Analiz için lisansı etkinleştir.',
+  'log.licenseLocked': 'Analiz için lisansı etkinleştir.',
 
   'report.title': 'Analiz sonucu',
   'report.copyAll': 'Tümünü kopyala',
@@ -262,12 +296,22 @@ const tr: Record<keyof typeof en, string> = {
   'report.loadingHint': 'Claude raporu hazırlıyor. İptal ile durdurabilirsin.',
   'report.retry': 'Tekrar dene',
   'report.source': 'Kaynak: Claude',
+  'report.sample':
+    'Bu bir örnektir, senin logun değil. Gerçek analiz için lisansı etkinleştir.',
   'report.truncated':
     'Log {limit} karakterden uzundu. Claude’a yalnızca başı ve sonu gönderildi; ortadaki satırlar bu rapora yansımamış olabilir.',
   'report.summary': 'Özet',
   'report.rootCause': 'Kök neden',
   'report.steps': 'Çözüm adımları',
   'report.empty': 'Henüz rapor yok. Log yapıştırıp Analiz Et’e bas.',
+  'report.langEn': 'İngilizce',
+  'report.langTr': 'Türkçe',
+  'report.languageMismatch':
+    'Bu rapor {produced} yazıldı. Düğmeler değişti, analiz metni değişmedi. {current} için yeniden analiz et.',
+  'report.languageMismatchAction': 'Yeniden analiz et',
+  'report.localizing': 'Raporlar {current} diline aktarılıyor…',
+  'report.localizingHint':
+    'Kayıtlı analizler seçtiğin dile çevriliyor. Bu yeni bir log analizi değildir.',
 
   'copy.copy': 'Kopyala',
   'copy.copied': 'Kopyalandı',
@@ -300,6 +344,7 @@ const tr: Record<keyof typeof en, string> = {
     'Claude hız limiti doldu. Yaklaşık {seconds} saniye bekleyip Tekrar dene’ye bas.',
   'errors.rateLimit':
     'Claude kotası veya hız limiti doldu. Biraz bekleyip Tekrar dene’ye bas.',
+  'errors.busy': 'Bir analiz zaten sürüyor. Bitmesini bekle, sonra tekrar dene.',
   'errors.overloaded': 'Claude şu an yoğun. Biraz bekleyip Tekrar dene’ye bas.',
   'errors.serverDown':
     'Claude servisi şu an yanıt veremiyor. Biraz sonra Tekrar dene’ye bas.',
@@ -320,7 +365,9 @@ const tr: Record<keyof typeof en, string> = {
   'errors.incompleteReport':
     'Claude yanıtında özet, kök neden veya adımlar eksik. Tekrar dene.',
   'errors.logEmpty': 'Analiz için log metni gerekli.',
+  'errors.logTooLarge': 'Bu log çok büyük. Yaklaşık 2 MB metnin altında, daha kısa bir bölüm yapıştır.',
   'errors.analyzeFailed': 'Analiz sırasında bir şeyler ters gitti.',
+  'errors.unexpected': 'Beklenmeyen bir hata oldu. Aynı işi bir kez daha dene.',
   'errors.historyNotFound': 'Kayıt bulunamadı.',
   'errors.historyReadFailed': 'Geçmiş okunamadı.',
   'errors.historyClearFailed': 'Geçmiş silinemedi.',
@@ -334,8 +381,7 @@ const tr: Record<keyof typeof en, string> = {
   'errors.fileNotText': 'Bu dosya metin gibi durmuyor. .log, .txt veya .json dene.',
   'errors.fileNoText': 'Dosyada okunacak metin yok.',
   'errors.fileReadFailed': 'Dosya okunamadı.',
-  'errors.licenseRequired':
-    '{max} deneme analizi doldu. Devam etmek için bir lisans anahtarı etkinleştir.',
+  'errors.licenseRequired': 'Analiz için bir lisans anahtarı etkinleştir.',
   'errors.licenseEmpty': 'Lisans alanı boş.',
   'errors.licenseInvalid': 'Bu lisans anahtarı geçersiz veya başka bir makinede kullanılmış.',
   'errors.licenseActivationLimit':
@@ -350,6 +396,8 @@ const tr: Record<keyof typeof en, string> = {
   'errors.licenseActivateFailed': 'Lisans etkinleştirilemedi.',
   'errors.licenseClearFailed': 'Lisans kaldırılamadı.',
   'errors.licenseBuyFailed': 'Mağaza sayfası açılamadı. Tarayıcını kontrol et.',
+  'errors.supportMailFailed':
+    'Posta uygulaması açılamadı. logfarm.support@gmail.com adresine yaz.',
 }
 
 export type TranslationKey = keyof typeof en
